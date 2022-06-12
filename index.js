@@ -1,15 +1,13 @@
-/* Grab DOM elements and store as variables */
 const inputEl = document.querySelector("#input-el")
 const inputBtn = document.querySelector("#input-btn")
+const tabBtn = document.querySelector("#tab-btn")
+const deleteBtn = document.querySelector("#delete-btn")
 const ulEl = document.querySelector("#ul-el")
 
-/* All saved leads */
 let myLeads = []
 
-/* Leads from local storage */
-let leadsFromLocalStorage = JSON.parse(localStorage.getItem("myLeads"))
+const leadsFromLocalStorage = JSON.parse(localStorage.getItem("myLeads"))
 
-/* Save lead */
 const saveLead = () =>
 {
     myLeads.push(inputEl.value)
@@ -18,35 +16,49 @@ const saveLead = () =>
     /* Save the myLeads array to localStorage */
     localStorage.setItem("myLeads", JSON.stringify(myLeads))
 
-    renderLeads()
+    render(myLeads)
 }
-
-/* Events listeners to save lead */
 inputEl.addEventListener("keydown", (e) => {if(e.key === "Enter"){saveLead()}})
 inputBtn.addEventListener("click", saveLead)
 
-/* Render leads, triggered by saveLead function */
-const renderLeads = () =>
+const render = (leads) =>
 {
-    /* All HTML for list items */
     let listItems = ""
 
-    /* Add each item in myLeads as a HTML list item */
-    for (let i = 0; i < myLeads.length; i++)
+    for (let i = 0; i < leads.length; i++)
     {
         listItems += `
             <li>
-                <a target="_blank" href="${myLeads[i]}">
-                    ${myLeads[i]}
+                <a target="_blank" href="${leads[i]}">
+                    ${leads[i]}
                 </a>
             </li>`
     }
-    /* Render listItems inside ul */
     ulEl.innerHTML = listItems
 }
 
-/* Render leads from local storage if any */
-if (leadsFromLocalStorage > 0)
+if (leadsFromLocalStorage)
 {
-    renderLeads()
+    myLeads = leadsFromLocalStorage
+    render(myLeads)
 }
+
+const saveCurrentTab = () =>
+{
+    chrome.tabs.query({active: true, currentWindow: true}, (tabs) =>
+    {
+        console.log(tabs)
+        myLeads.push(tabs[0].url)
+        localStorage.setItem("myLeads", JSON.stringify(myLeads))
+        render(myLeads)
+    })
+}
+tabBtn.addEventListener("click", saveCurrentTab) 
+
+const deleteAllLeads = () =>
+{
+    localStorage.clear()
+    myLeads = []
+    render(myLeads)
+}
+deleteBtn.addEventListener("dblclick", deleteAllLeads)
